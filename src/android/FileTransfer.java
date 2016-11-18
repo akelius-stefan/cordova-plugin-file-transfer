@@ -391,16 +391,21 @@ public class FileTransfer extends CordovaPlugin {
                         * to the contentSize, since it is part of the body of the HTTP request.
                         */
                     StringBuilder beforeData = new StringBuilder();
+                    String parameterContentType = "application/octet-stream";
+                    if(params != null && params.has("contentType")){
+                        parameterContentType = params.getString("contentType");
+                    }
                     try {
                         for (Iterator<?> iter = params.keys(); iter.hasNext();) {
                             Object key = iter.next();
-                            if(!String.valueOf(key).equals("headers"))
+                            if(!String.valueOf(key).equals("headers") && !String.valueOf(key).equals("contentType"))
                             {
-                              beforeData.append(LINE_START).append(BOUNDARY).append(LINE_END);
-                              beforeData.append("Content-Disposition: form-data; name=\"").append(key.toString()).append('"');
-                              beforeData.append(LINE_END).append(LINE_END);
-                              beforeData.append(params.getString(key.toString()));
-                              beforeData.append(LINE_END);
+                                beforeData.append(LINE_START).append(BOUNDARY).append(LINE_END);
+                                beforeData.append("Content-Disposition: form-data; name=\"").append(key.toString()).append('"');
+                                beforeData.append(LINE_END);
+                                beforeData.append("Content-Type: ").append(parameterContentType).append(LINE_END).append(LINE_END);
+                                beforeData.append(params.getString(key.toString()));
+                                beforeData.append(LINE_END);
                             }
                         }
                     } catch (JSONException e) {
