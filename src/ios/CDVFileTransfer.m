@@ -153,6 +153,13 @@ static CFIndex WriteDataToStream(NSData* data, CFWriteStreamRef stream)
     // for allowed methods, currently PUT or POST (forces POST for
     // unrecognised values)
     NSString* httpMethod = [command argumentAtIndex:10 withDefault:@"POST"];
+    NSString* parameterContentType = @"application/octet-stream";
+    
+    if(options != nil && [[options allKeys] containsObject:@"contentType"]){
+        parameterContentType = [options valueForKey:@"contentType"];
+    }
+   
+    
     CDVPluginResult* result = nil;
     CDVFileTransferError errorCode = 0;
 
@@ -195,6 +202,7 @@ static CFIndex WriteDataToStream(NSData* data, CFWriteStreamRef stream)
     NSMutableData* postBodyBeforeFile = [NSMutableData data];
 
     for (NSString* key in options) {
+        if(![key isEqualToString:@"contentType"]){
         id val = [options objectForKey:key];
         if (!val || (val == [NSNull null]) || [key isEqualToString:kOptionsKeyCookie]) {
             continue;
@@ -209,9 +217,12 @@ static CFIndex WriteDataToStream(NSData* data, CFWriteStreamRef stream)
         }
 
         [postBodyBeforeFile appendData:formBoundaryData];
-        [postBodyBeforeFile appendData:[[NSString stringWithFormat:@"Content-Disposition: form-data; name=\"%@\"\r\n\r\n", key] dataUsingEncoding:NSUTF8StringEncoding]];
+        [postBodyBeforeFile appendData:[[NSString stringWithFormat:@"Content-Disposition: form-data; name=\"%@\"\r\n", key] dataUsingEncoding:NSUTF8StringEncoding]];
+        [postBodyBeforeFile appendData:[[NSString stringWithFormat:@"Content-Type: %@\r\n\r\n", parameterContentType] dataUsingEncoding:NSUTF8StringEncoding]];
+        
         [postBodyBeforeFile appendData:[val dataUsingEncoding:NSUTF8StringEncoding]];
         [postBodyBeforeFile appendData:[@"\r\n" dataUsingEncoding : NSUTF8StringEncoding]];
+        }
     }
 
     [postBodyBeforeFile appendData:formBoundaryData];
